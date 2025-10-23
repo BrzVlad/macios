@@ -90,7 +90,7 @@ namespace Foundation {
 		}
 
 		public override bool IsInvalid {
-			get => handle != IntPtr.Zero;
+			get => handle == IntPtr.Zero;
 		}
 
 		protected override bool ReleaseHandle ()
@@ -147,6 +147,7 @@ namespace Foundation {
 		// having to attach those threads to to the managed runtime.
 #nullable enable
 		NSObjectDataHandle? data_handle;
+		GCHandle data_handle_gchandle;
 
 		internal unsafe NSObjectData* GetData ()
 		{
@@ -169,6 +170,7 @@ namespace Foundation {
 			if (!Runtime.IsCoreCLR) // This condition (and the assignment to __handle_for_mono if applicable) is trimmed away by the linker.
 				__data_for_mono = data.Data;
 
+			data_handle_gchandle = GCHandle.Alloc (data);
 			return data;
 		}
 
@@ -452,6 +454,7 @@ namespace Foundation {
 				Runtime.NativeObjectHasDied (handle, this);
 			}
 			xamarin_release_managed_ref (handle, user_type.AsByte ());
+			data_handle_gchandle.Free ();
 		}
 
 		static bool IsProtocol (Type type, IntPtr protocol)
